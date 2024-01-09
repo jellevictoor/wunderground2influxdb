@@ -11,6 +11,7 @@ pandas = "^2.1.4"
 beautifulsoup4 = "^4.12.2"
 requests = "^2.31.0"
 lxml = "^5.0.0"
+influxdb-client = "^1.39.0"
 
 
 [build-system]

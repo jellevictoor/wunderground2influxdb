@@ -1,7 +1,11 @@
+import time
 from datetime import datetime, timedelta
 
 import pandas as pd
 import pytz
+from influxdb_client.client.influxdb_client import InfluxDBClient
+from influxdb_client.client.write.point import Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 from html_scraper import scrape_weather_data
 
@@ -18,38 +22,46 @@ def format_date(original_date_string):
 
 
 stations = ["IARDOO6", "IARDOO10", "IPITTE11"]
+bucket = "wunderground"
+org = "victoor.io"
+token = "ZeJgWpsHbzNwsskV5O2ObJaMo2pnd_OlmXYeM6SK-d1-hxMiPSws3cFA3fOKXDlsuYZPkyswqhxm5w_-NsjcIg=="
+# Store the URL of your InfluxDB instance
+url="http://192.168.1.5:8086"
 
 
-def get_dates():
+def get_dates(no_of_days=2):
     # Get the current date
     current_date = datetime.now()
-    return [(current_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(0, 31)]
+    return [(current_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(0, no_of_days)]
 
 
-dates = get_dates()
+dates = get_dates(1)
+influxdb_client = InfluxDBClient(
+   url=url,
+   token=token,
+   org=org
+)
+write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
 
-for station in stations:
-    for date in dates:
+for date in dates:
+    for station in stations:
         url = f"https://www.wunderground.com/dashboard/pws/{station}/table/{date}/{date}/daily"
+        start_time = time.time()
         df = scrape_weather_data(url)
-
-        # Iterate through the rows and generate InfluxDB INSERT statements
-
-        for index, row in df.iterrows():
-            timestamp = pd.Timestamp(
-                format_date(f"{date} {row['Time']}")).value  # Assuming 'Time' is a column with timestamps
-            temperature = row['Temperature']
-            humidity = row['Humidity']
-            pressure = row['Pressure']
-            rain = row['Rain']
-
-            # Format the INSERT statement
-            influx_insert = (
-                # f"influx -precision rfc3339 -database wunderground "
-                f'{station} '
-                f'temperature={temperature},humidity={humidity},'
-                f'pressure={pressure},'
-                f'rain={rain} {timestamp}'
-            )
-
-            print(influx_insert)
+        if df is not None:
+            for index, row in df.iterrows():
+                timestamp = pd.Timestamp(
+                    format_date(f"{date} {row['Time']}")).value
+                temperature = row['Temperature']
+                humidity = row['Humidity']
+                pressure = row['Pressure']
+                rain = row['Rain']
+                p = (Point(station)
+                     .field("temperature", temperature)
+                     .field("humidity", humidity)
+                     .field("pressure", pressure)
+                     .field("rain", rain)
+                     .time(timestamp))
+                write_api.write(bucket=bucket, org=org, record=p)
+        end_time = time.time()
+        print(f"Finished scraping {url} in {(end_time - start_time):.2f} seconds")
