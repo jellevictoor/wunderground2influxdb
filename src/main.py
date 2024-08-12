@@ -29,11 +29,11 @@ def get_dates_to_scrape(no_of_days: int) -> List[str]:
 @app.command()
 def scrape_and_store(
         days: int = typer.Option(60, help="Number of days to scrape"),
-        bucket: str = typer.Option("wunderground", help="InfluxDB bucket name"),
+        stations: List[str] = typer.Option(..., help="Wunderground weatherstations IDs to scrape"),
+        url: str = typer.Option("http://localhost:8086", help="InfluxDB instance URL"),
         org: str = typer.Option(..., help="InfluxDB organization"),
+        bucket: str = typer.Option("wunderground", help="InfluxDB bucket name"),
         token: str = typer.Option(..., help="InfluxDB access token"),
-        url: str = typer.Option("http://192.168.1.5:8086", help="InfluxDB instance URL"),
-        stations: List[str] = typer.Option(..., help="Weather stations to scrape")
 ):
     dates = get_dates_to_scrape(days)
     influxdb_client = InfluxDBClient(url=url, token=token, org=org)
