@@ -3,9 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def scrape_weather_data(url):
+def scrape_weather_data(url, timeout=30):
     # Send an HTTP GET request to fetch the webpage content
-    response = requests.get(url)
+    response = requests.get(url, timeout=timeout)
 
     if response.status_code == 200:
         # Parse the HTML content
@@ -28,13 +28,30 @@ def scrape_weather_data(url):
             # Loop through the rows and extract data from each cell
             for row in rows:
                 cells = row.find_all('td')
-                if len(cells) >= 9:
+                if len(cells) >= 10:
                     try:
-                        time = cells[0].strong.text.strip()
-                        temperature = parse_value(cells[1].span.span.text.strip())
-                        humidity = parse_value(cells[3].span.span.text.strip())
-                        pressure = parse_value(cells[7].span.span.text.strip())
-                        rain = parse_value(cells[9].span.span.text.strip())
+                        # Extract time from first cell
+                        time_elem = cells[0].find('strong')
+                        if not time_elem:
+                            continue
+                        time = time_elem.text.strip()
+
+                        # Extract values from wu-value spans
+                        temp_elem = cells[1].find('span', class_='wu-value')
+                        humidity_elem = cells[3].find('span', class_='wu-value')
+                        pressure_elem = cells[7].find('span', class_='wu-value')
+                        rain_elem = cells[9].find('span', class_='wu-value')
+
+                        if not all([temp_elem, humidity_elem, pressure_elem, rain_elem]):
+                            continue
+
+                        temperature = parse_value(temp_elem.text.strip())
+                        humidity = parse_value(humidity_elem.text.strip())
+                        pressure = parse_value(pressure_elem.text.strip())
+                        rain = parse_value(rain_elem.text.strip())
+
+                        if temperature is None or humidity is None or pressure is None or rain is None:
+                            continue
 
                         # Append the data to respective lists
                         times.append(time)
@@ -42,8 +59,8 @@ def scrape_weather_data(url):
                         humidity_percent.append(humidity)
                         pressure_hpa.append(pressure * 33.863889532610884)
                         rain_mm.append(rain * 25.4)
-                    except:
-                        print(f"Error parsing row for {url}")
+                    except Exception as e:
+                        print(f"Error parsing row for {url}: {e}")
             data = {
                 'Time': times,
                 'Temperature': temperature_c,
@@ -63,6 +80,5 @@ def scrape_weather_data(url):
 def parse_value(value):
     try:
         return float(value)
-
-    except ValueError:
-        return
+    except (ValueError, TypeError):
+        return None

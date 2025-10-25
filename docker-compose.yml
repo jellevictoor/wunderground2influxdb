@@ -1,0 +1,31 @@
+services:
+  wunderground2influx:
+    build: .
+    image: wunderground2influx:latest
+    container_name: wunderground2influx
+    environment:
+      - TZ=Europe/Amsterdam
+    env_file:
+      - .env
+    command:
+      - --stations
+      - ${STATION_1}
+      - --stations
+      - ${STATION_2}
+      - --stations
+      - ${STATION_3}
+      - --org
+      - ${INFLUX_ORG}
+      - --token
+      - ${INFLUX_TOKEN}
+      - --url
+      - ${INFLUX_URL}
+      - --bucket
+      - ${INFLUX_BUCKET:-wunderground}
+      - --days
+      - ${DAYS:-60}
+      - --max-retries
+      - ${MAX_RETRIES:-3}
+      - --request-delay
+      - ${REQUEST_DELAY:-1.0}
+    restart: unless-stopped

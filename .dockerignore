@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv
+venv/
+ENV/
+
+# IDEs
+.idea
+.vscode
+
+# Documentation
+README.md
+LICENSE
+
+# Environment files
+.env
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore

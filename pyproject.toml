@@ -1,21 +1,18 @@
-[tool.poetry]
+[project]
 name = "wunderground2influx"
 version = "0.1.0"
 description = ""
-authors = ["Jelle <jelle@victoor.io>"]
+authors = [
+    {name = "Jelle", email = "jelle@victoor.io"}
+]
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.9"
-pandas = "^2.1.4"
-beautifulsoup4 = "^4.12.2"
-requests = "^2.31.0"
-lxml = "^5.0.0"
-influxdb-client = "^1.39.0"
-typer = "^0.12.3"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=2.1.4",
+    "beautifulsoup4>=4.12.2",
+    "requests>=2.31.0",
+    "lxml>=5.0.0",
+    "influxdb-client>=1.39.0",
+    "typer>=0.12.3",
+]
 
